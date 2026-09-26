@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>デイサービス一覧（都道府県・市区町村別）定員・土日営業</title><meta name="description" content="デイサービスを市区町村別に定員・営業曜日つきで一覧。厚労省オープンデータから作成。">
+<link rel="canonical" href="https://test190928.github.io/kaigo/"><style>
+:root{--fg:#1d2327;--muted:#5b6770;--line:#d9dee2;--bg:#fff;--head:#f3f5f7;--link:#0b57d0}
+@media (prefers-color-scheme:dark){:root{--fg:#e6e8ea;--muted:#9aa5ad;--line:#3a4248;--bg:#15191c;--head:#1f2529;--link:#8ab4f8}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.7 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
+main{max-width:1000px;margin:0 auto;padding:16px}a{color:var(--link)}h1{font-size:1.5rem;line-height:1.4;margin:.5em 0}
+h2{font-size:1.15rem;margin:1.6em 0 .5em}.muted{color:var(--muted);font-size:.9rem}nav.crumb{font-size:.9rem}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:12px 0}
+.kpi div{border:1px solid var(--line);border-radius:8px;padding:8px 12px}.kpi b{display:block;font-size:1.3rem}
+.tbl{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--head);cursor:pointer;white-space:nowrap;position:sticky;top:0}td.num{text-align:right;white-space:nowrap}
+footer{margin-top:32px;border-top:1px solid var(--line);padding-top:12px}
+</style></head>
+<body><main><h1>デイサービス一覧（都道府県・市区町村別）</h1><p>厚生労働省の介護サービス情報公表システムのオープンデータ（2026年6月末時点）から、デイサービス（通所介護・地域密着型通所介護）を市区町村ごとに集計し、定員・営業曜日つきで一覧にしています。</p><ul><li><a href="saitama/">埼玉県</a>（1,841件）</li></ul>
+<footer class="muted">
+<p>出典: 厚生労働省「介護サービス情報公表システム」オープンデータ（2026年6月末時点）を加工して作成。
+<a href="https://www.mhlw.go.jp/stf/kaigo-kouhyou_opendata.html">配布ページ</a> / ライセンス <a href="https://creativecommons.org/licenses/by/4.0/deed.ja">CC BY 4.0</a>。
+介護サービス情報公表システムから抽出したデータです。件数・定員・曜日は事業所の届出時点の値で、現在の空き状況や料金は含みません。
+最新の情報は各事業所または<a href="https://www.kaigokensaku.mhlw.go.jp/">介護サービス情報公表システム</a>でご確認ください。</p>
+<p>ページ生成日: 2026-09-26</p>
+</footer></main><script>
+document.querySelectorAll('table.sortable').forEach(function(t){
+  t.querySelectorAll('th').forEach(function(th,i){th.addEventListener('click',function(){
+    var b=t.tBodies[0],rs=Array.from(b.rows),asc=th.dataset.asc!=='1';th.dataset.asc=asc?'1':'0';
+    rs.sort(function(x,y){var a=x.cells[i].dataset.v||x.cells[i].textContent,c=y.cells[i].dataset.v||y.cells[i].textContent;
+      var na=parseFloat(a),nc=parseFloat(c);var r=(!isNaN(na)&&!isNaN(nc))?na-nc:a.localeCompare(c,'ja');return asc?r:-r;});
+    rs.forEach(function(r){b.appendChild(r);});});});});
+</script></body></html>
