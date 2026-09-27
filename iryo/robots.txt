@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://seiricho.com/iryo/sitemap.xml
