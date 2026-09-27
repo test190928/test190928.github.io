@@ -101,14 +101,26 @@ def main():
     wait_live(urls[0])  # 変更が反映されてから送る（削除されたページなら待ちきって送る）
     host = base.removeprefix("https://")
     for i in range(0, len(urls), BATCH):
-        body = json.dumps({"host": host, "key": k, "keyLocation": key_url, "urlList": urls[i:i + BATCH]}).encode()
+        submit(host, k, key_url, urls[i:i + BATCH])
+
+
+def submit(host, k, key_url, urls, tries=10):
+    body = json.dumps({"host": host, "key": k, "keyLocation": key_url, "urlList": urls}).encode()
+    for n in range(tries):
         req = urllib.request.Request(ENDPOINT, data=body, headers={"Content-Type": "application/json; charset=utf-8"})
         try:
             with urllib.request.urlopen(req, timeout=60) as r:
-                print(f"IndexNow: {len(urls[i:i + BATCH])} 件を送信 HTTP {r.status}")
+                print(f"IndexNow: {len(urls)} 件を送信 HTTP {r.status}")
+                return
         except urllib.error.HTTPError as e:
+            msg = e.read()[:200]
+            # 鍵を置いた直後は、IndexNow 側の鍵の確認が終わるまで 403 SiteVerificationNotCompleted が返る
+            if e.code == 403 and b"SiteVerificationNotCompleted" in msg and n < tries - 1:
+                print("IndexNow: 鍵の確認待ち。60秒後に再送")
+                time.sleep(60)
+                continue
             # 403=鍵が無効 422=ホストと URL が合わない 429=送りすぎ
-            sys.exit(f"IndexNow: HTTP {e.code} {e.read()[:200]!r}")
+            sys.exit(f"IndexNow: HTTP {e.code} {msg!r}")
 
 
 if __name__ == "__main__":
