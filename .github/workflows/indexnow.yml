@@ -1,0 +1,34 @@
+name: indexnow
+
+# main に push されたら、変わったページの URL を IndexNow（Bing など）に送る。
+# 手動実行（Run workflow）は、サイトマップに載っている全 URL を送る（初回・独自ドメインへ移した直後に使う）。
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '.github/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: indexnow
+  cancel-in-progress: false
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Submit changed URLs
+        if: github.event_name == 'push'
+        run: python3 .github/indexnow.py diff "${{ github.event.before }}" "${{ github.sha }}"
+
+      - name: Submit all URLs
+        if: github.event_name == 'workflow_dispatch'
+        run: python3 .github/indexnow.py all
