@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://test190928.github.io/kansen/sitemap.xml
+Sitemap: https://seiricho.com/kansen/sitemap.xml
