@@ -92,7 +92,8 @@
 
   function calc(city, household) {
     var ms = household.members.filter(function (m) { return m && (m.cat || (m.age != null && m.age !== "")); })
-      .map(function (m) { var a = ageOf(m); return {age: a, cat: catOf(a), kyuyo: m.kyuyo, nenkin: m.nenkin, other: m.other, rishoku: m.rishoku}; });
+      .map(function (m) { var a = ageOf(m); return {age: a, cat: catOf(a), kyuyo: m.kyuyo, nenkin: m.nenkin, other: m.other, rishoku: m.rishoku,
+                                       fuyo: +m.fuyo || 0, fuyoSho: +m.fuyoSho || 0, honnin: !!m.honnin}; });
     var ps = ms.map(person);
     var loc = city.local || {};
     // 横浜市: 19歳未満で所得58万円以下の被保険者1人につき、世帯主の基準総所得金額（所得割の基礎）から控除する（軽減の判定には使わない）
@@ -104,6 +105,12 @@
       ps[0].base = Math.max(0, ps[0].base - ded);
       ps[0].yokohamaChild = ded;
     }
+    // 名古屋市: 所得割額の独自控除。1人ごとに（扶養1人33万円・障害者控除の対象の扶養1人86万円・本人の障害者・寡婦・ひとり親控除92万円）の合計を、
+    // その人の所得割の基礎を上限に出し、区分ごとに「世帯の合計×料率」（1円未満切捨て）を所得割から差し引く（市の公式の試算 shisan.js の式）
+    var ng = loc.nagoya;
+    if (ng) ms.forEach(function (m, i) {
+      ps[i].nagoyaDed = Math.min(ps[i].base, ng.fuyo * m.fuyo + ng.fuyo_sho * m.fuyoSho + (m.honnin ? ng.honnin : 0));
+    });
     var n = ms.length;
     var hantei = ps.reduce(function (s, p) { return s + p.hantei; }, 0);
     var nKyuyo = ps.filter(function (p) { return p.kyuyoTo; }).length;
@@ -126,12 +133,21 @@
         // r.shotoku_round に挙げた区分は1円未満を四捨五入（江戸川区の公式の試算: 医療・支援・子ども分は四捨五入、介護分は切捨て）
         var hb = idx.reduce(function (s, i) { return s + ps[i].base; }, 0) * c.rate;
         shotoku = (r.shotoku_round || []).indexOf(part) >= 0 ? Math.round(hb) : floor(hb);
+        if (ng) shotoku -= floor(idx.reduce(function (s, i) { return s + ps[i].nagoyaDed; }, 0) * c.rate);
       } else {
         shotoku = idx.reduce(function (s, i) { return s + floor(floorTo(ps[i].base, r.base || 1) * c.rate); }, 0);
       }
       var kin = 0;
       who.forEach(function (m) {
         var v;
+        if (r.kintou_person) {
+          // 軽減額を1人ごとに1円未満切上げ、未就学児はその残りの5割（1円未満切上げ）を引く（名古屋市の公式の試算）
+          var k1 = part === "kodomo" ? ((m.cat === "pre" || m.cat === "child") ? 0 : c.kin + (c.kin18 || 0)) : c.kin;
+          v = k1 - Math.ceil(k1 * pr - 1e-9);
+          if (m.cat === "pre" && part !== "kodomo") v -= Math.ceil(v / 2 - 1e-9);
+          kin += v;
+          return;
+        }
         if (part === "kodomo") v = (m.cat === "pre" || m.cat === "child") ? 0 : c.kin + (c.kin18 || 0);
         // 未就学児の軽減額（均等割の5割）は1円未満を切り上げる（均等割が奇数の小田原市の公式の試算: 27,645円→軽減13,823円）
         else if (m.cat === "pre") v = r.kintou ? c.kin - Math.ceil(c.kin / 2) : c.kin / 2;
@@ -139,7 +155,11 @@
         kin += v;
       });
       var byo = c.byo || 0;
-      if (r.kintou) {
+      if (r.kintou_person) {
+        byo = byo - Math.ceil(byo * pr - 1e-9);
+        // 名古屋市: 法定の軽減がある世帯の均等割から1人につき2,000円（均等割額の独自控除）
+        if (ng && rate && ng.kintou_parts.indexOf(part) >= 0) kin -= ng.kintou * who.length;
+      } else if (r.kintou) {
         // 軽減額を r.kintou 円単位で切り上げて引く（世帯の均等割・平等割の合計それぞれに）
         kin = floorTo(kin, 1) - ceilTo(kin * pr, r.kintou);
         byo = byo - ceilTo(byo * pr, r.kintou);

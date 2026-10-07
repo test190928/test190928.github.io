@@ -8,6 +8,7 @@
   var K = window.KokuhoCalc;
   var MAX = 8;
   var yen = function (v) { return Math.round(v).toLocaleString("ja-JP") + "円"; };
+  var NG = city.local && city.local.nagoya;  // 名古屋市の所得割額の独自控除だけに使う入力欄
   var man = function (s) { var v = parseFloat(String(s).replace(/[,，\s]/g, "")); return isFinite(v) && v > 0 ? Math.round(v * 10000) : 0; };
 
   function row(i) {
@@ -18,6 +19,9 @@
       '<label>年金の収入（2025年・年額）<input name="nenkin" type="text" inputmode="decimal" placeholder="0"> 万円</label>' +
       '<label>その他の所得（事業所得など・経費を引いた後）<input name="other" type="text" inputmode="decimal" placeholder="0"> 万円</label>' +
       '<label class="chk"><input name="rishoku" type="checkbox"> 倒産・解雇・雇止めなどで離職した（65歳未満・ハローワークの離職理由が対象のもの）</label>' +
+      (NG ? '<label>この人が申告した扶養家族（障害者控除の対象でない人・16歳未満も含む）<input name="fuyo" type="number" inputmode="numeric" min="0" max="9" placeholder="0"> 人</label>' +
+        '<label>この人が申告した扶養家族（障害者控除の対象の人）<input name="fuyoSho" type="number" inputmode="numeric" min="0" max="9" placeholder="0"> 人</label>' +
+        '<label class="chk"><input name="honnin" type="checkbox"> この人が障害者控除（本人）・寡婦控除・ひとり親控除の対象</label>' : "") +
       "</fieldset>";
   }
 
@@ -41,7 +45,10 @@
       if (age === "") return;
       ms.push({age: Math.max(0, Math.min(74, parseInt(age, 10) || 0)), kyuyo: man(f.querySelector('[name="kyuyo"]').value),
                nenkin: man(f.querySelector('[name="nenkin"]').value), other: man(f.querySelector('[name="other"]').value),
-               rishoku: f.querySelector('[name="rishoku"]').checked});
+               rishoku: f.querySelector('[name="rishoku"]').checked,
+               fuyo: NG ? Math.max(0, Math.min(9, parseInt(f.querySelector('[name="fuyo"]').value, 10) || 0)) : 0,
+               fuyoSho: NG ? Math.max(0, Math.min(9, parseInt(f.querySelector('[name="fuyoSho"]').value, 10) || 0)) : 0,
+               honnin: NG ? f.querySelector('[name="honnin"]').checked : false});
     });
     return ms;
   }
@@ -66,6 +73,8 @@
     if (ms.some(function (m) { return m.age <= 17; })) notes.push("18歳になった年度の3月31日までの子どもは、子ども・子育て支援金分の均等割がかかりません。");
     if (ms.some(function (m) { return m.age >= 65; })) notes.push("65〜74歳の人の介護保険料は、国民健康保険" + city.kindWord + "とは別に介護保険から請求されます。");
     if (r.members[0] && r.members[0].yokohamaChild) notes.push("横浜市の制度で、19歳未満の子どもの分として世帯主の所得割の計算から" + yen(r.members[0].yokohamaChild) + "を差し引いています。");
+    if (NG && r.members.some(function (m) { return m.nagoyaDed; })) notes.push(city.name + "の制度で、扶養家族・本人の障害等の控除（所得割額の独自控除）を所得割から差し引いています。");
+    if (NG && r.keigen) notes.push(city.name + "の制度で、医療分の均等割から1人につき2,000円を差し引いています（均等割額の独自控除）。");
     out.innerHTML = '<div class="result"><p class="big">年額 <b>' + yen(r.total) + "</b></p><p>1か月あたり 約" + yen(r.total / 12) +
       "（年額÷12。実際の納付は年" + (city.installments || "8〜10") + "回などに分かれます）・" + kg + "</p>" +
       '<div class="tbl"><table><tr><th>区分</th><th>年額</th><th>内訳</th></tr>' + rows + "</table></div>" +
