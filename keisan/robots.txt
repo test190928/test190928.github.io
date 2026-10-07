@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://seiricho.com/keisan/sitemap.xml
