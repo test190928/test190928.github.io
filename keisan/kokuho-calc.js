@@ -121,7 +121,7 @@
       if (r.shotoku === "household") {
         shotoku = floor(idx.reduce(function (s, i) { return s + ps[i].base; }, 0) * c.rate);
       } else {
-        shotoku = idx.reduce(function (s, i) { return s + floor(ps[i].base * c.rate); }, 0);
+        shotoku = idx.reduce(function (s, i) { return s + floor(floorTo(ps[i].base, r.base || 1) * c.rate); }, 0);
       }
       var kin = 0;
       who.forEach(function (m) {
