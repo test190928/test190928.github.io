@@ -119,7 +119,9 @@
       if (!who.length) { res.parts[part] = {shotoku: 0, kintou: 0, byodo: 0, sum: 0, amount: 0, capped: false}; return; }
       var shotoku;
       if (r.shotoku === "household") {
-        shotoku = floor(idx.reduce(function (s, i) { return s + ps[i].base; }, 0) * c.rate);
+        // r.shotoku_round に挙げた区分は1円未満を四捨五入（江戸川区の公式の試算: 医療・支援・子ども分は四捨五入、介護分は切捨て）
+        var hb = idx.reduce(function (s, i) { return s + ps[i].base; }, 0) * c.rate;
+        shotoku = (r.shotoku_round || []).indexOf(part) >= 0 ? Math.round(hb) : floor(hb);
       } else {
         shotoku = idx.reduce(function (s, i) { return s + floor(floorTo(ps[i].base, r.base || 1) * c.rate); }, 0);
       }
