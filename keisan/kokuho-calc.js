@@ -108,12 +108,16 @@
     var hantei = ps.reduce(function (s, p) { return s + p.hantei; }, 0);
     var nKyuyo = ps.filter(function (p) { return p.kyuyoTo; }).length;
     var rate = n ? keigen(hantei, n, nKyuyo) : 0;
-    var keep = 1 - rate;  // 軽減後に残る割合
+    // 千葉市: 法定軽減に当たらず、軽減判定所得が 基準×√人数（1万円単位に切上げ）未満の世帯は、医療・後期・介護分の均等割・平等割を市独自に2割減免（公式の試算表の式）
+    var genmen = 0, cg = loc.chiba_genmen;
+    if (cg && n && !rate && hantei < ceilTo(cg.base * Math.sqrt(n), cg.unit)) genmen = cg.rate;
     var r = city.round || {};
-    var res = {members: ps, keigen: rate, hantei: hantei, parts: {}, total: 0};
+    var res = {members: ps, keigen: rate, genmen: genmen, hantei: hantei, parts: {}, total: 0};
     PARTS.forEach(function (part) {
       var c = city.parts[part];
       if (!c) return;
+      var pr = genmen && cg.parts.indexOf(part) >= 0 ? genmen : rate;  // この区分に当てる軽減（減免）の割合
+      var keep = 1 - pr;
       var who = ms.filter(function (m) { return liable(part, m); });
       var idx = ms.map(function (m, i) { return liable(part, m) ? i : -1; }).filter(function (i) { return i >= 0; });
       if (!who.length) { res.parts[part] = {shotoku: 0, kintou: 0, byodo: 0, sum: 0, amount: 0, capped: false}; return; }
@@ -137,8 +141,8 @@
       var byo = c.byo || 0;
       if (r.kintou) {
         // 軽減額を r.kintou 円単位で切り上げて引く（世帯の均等割・平等割の合計それぞれに）
-        kin = floorTo(kin, 1) - ceilTo(kin * rate, r.kintou);
-        byo = byo - ceilTo(byo * rate, r.kintou);
+        kin = floorTo(kin, 1) - ceilTo(kin * pr, r.kintou);
+        byo = byo - ceilTo(byo * pr, r.kintou);
       } else {
         kin = kin * keep;
         byo = byo * keep;
