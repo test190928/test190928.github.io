@@ -127,7 +127,9 @@
       who.forEach(function (m) {
         var v;
         if (part === "kodomo") v = (m.cat === "pre" || m.cat === "child") ? 0 : c.kin + (c.kin18 || 0);
-        else v = m.cat === "pre" ? c.kin / 2 : c.kin;
+        // 未就学児の軽減額（均等割の5割）は1円未満を切り上げる（均等割が奇数の小田原市の公式の試算: 27,645円→軽減13,823円）
+        else if (m.cat === "pre") v = r.kintou ? c.kin - Math.ceil(c.kin / 2) : c.kin / 2;
+        else v = c.kin;
         kin += v;
       });
       var byo = c.byo || 0;
