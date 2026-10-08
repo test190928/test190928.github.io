@@ -139,6 +139,8 @@
         var hb = idx.reduce(function (s, i) { return s + ps[i].base; }, 0) * c.rate;
         shotoku = (r.shotoku_round || []).indexOf(part) >= 0 ? Math.round(hb) : floor(hb);
         if (ng) shotoku -= floor(idx.reduce(function (s, i) { return s + ps[i].nagoyaDed; }, 0) * c.rate);
+        // r.shotoku_unit: 世帯の合計の所得割を この単位未満で切り捨てる（京都市の公式の簡易計算表: ROUNDDOWN(基礎額の合計×料率,-1)）
+        if (r.shotoku_unit) shotoku = floorTo(shotoku, r.shotoku_unit);
       } else {
         // r.shotoku === "person_round": 1人ごとに1円未満を四捨五入（浜松市の公式の試算シート: ROUND(基礎額×料率,0)）
         var rnd = r.shotoku === "person_round" ? function (v) { return Math.round(v * 1e6) / 1e6; } : null;
