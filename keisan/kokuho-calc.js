@@ -118,12 +118,17 @@
     // 千葉市: 法定軽減に当たらず、軽減判定所得が 基準×√人数（1万円単位に切上げ）未満の世帯は、医療・後期・介護分の均等割・平等割を市独自に2割減免（公式の試算表の式）
     var genmen = 0, cg = loc.chiba_genmen;
     if (cg && n && !rate && hantei < ceilTo(cg.base * Math.sqrt(n), cg.unit)) genmen = cg.rate;
+    // 仙台市: 2割軽減の世帯と、7・5・2割の軽減に当たらず軽減判定所得が 人数ごとの基準額＋給与所得者等の数×10万円 未満の世帯（4人まで）は、
+    // 全区分の均等割・平等割（軽減前）の2割をさらに減免（所得が一定額以下の方の減免・申請不要）。区分ごとの年額（端数処理後）から引き、
+    // 合計の10円未満を切り捨てる（公式の目安表と合う形。round.total）
+    var sg = loc.sendai_genmen;
+    if (sg && n && (rate === 0.2 || (!rate && n <= sg.base.length && hantei < sg.base[n - 1] + nKyuyo * sg.unit))) genmen = sg.rate;
     var r = city.round || {};
     var res = {members: ps, keigen: rate, genmen: genmen, hantei: hantei, parts: {}, total: 0};
     PARTS.forEach(function (part) {
       var c = city.parts[part];
       if (!c) return;
-      var pr = genmen && cg.parts.indexOf(part) >= 0 ? genmen : rate;  // この区分に当てる軽減（減免）の割合
+      var pr = genmen && cg && cg.parts.indexOf(part) >= 0 ? genmen : rate;  // この区分に当てる軽減（減免）の割合
       var keep = 1 - pr;
       var who = ms.filter(function (m) { return liable(part, m); });
       var idx = ms.map(function (m, i) { return liable(part, m) ? i : -1; }).filter(function (i) { return i >= 0; });
@@ -154,12 +159,14 @@
           return;
         }
         if (part === "kodomo") v = (m.cat === "pre" || m.cat === "child") ? 0 : c.kin + (c.kin18 || 0);
+        // 仙台市: 17歳以下（18歳になった年度の3月31日まで）の均等割は医療・支援・介護分も全額減免（子育て世帯の減免・申請不要）
+        else if (loc.sendai_child && (m.cat === "pre" || m.cat === "child")) v = 0;
         // 未就学児の軽減額（均等割の5割）は1円未満を切り上げる（均等割が奇数の小田原市の公式の試算: 27,645円→軽減13,823円）
         else if (m.cat === "pre") v = r.kintou ? c.kin - Math.ceil(c.kin / 2) : c.kin / 2;
         else v = c.kin;
         kin += v;
       });
-      var byo = c.byo || 0;
+      var kin0 = kin, byo = c.byo || 0;
       if (r.kintou_person) {
         byo = byo - ceilTo(byo * pr, r.kintou_unit || 1);
         // 名古屋市: 法定の軽減がある世帯の均等割から1人につき2,000円（均等割額の独自控除）
@@ -188,6 +195,7 @@
         }, 0);
         if (ex) amount = floorTo(Math.min(sum, c.cap) - ex, r.part || 1);
       }
+      if (sg && genmen && sg.parts.indexOf(part) >= 0) amount -= floor((kin0 + (c.byo || 0)) * genmen);
       res.parts[part] = {shotoku: shotoku, kintou: kin, byodo: byo, sum: sum, amount: amount, capped: capped};
       res.total += amount;
     });

@@ -57,7 +57,9 @@
     var ms = read();
     if (!ms.length) { out.innerHTML = '<p class="muted">年齢を入れると計算します。</p>'; return; }
     var r = K.calc(city, {members: ms});
+    var LOC = city.local || {};
     var kg = {0.7: "7割軽減", 0.5: "5割軽減", 0.2: "2割軽減"}[r.keigen] || (r.genmen ? "市独自の2割減免" : "軽減なし");
+    if (r.keigen && r.genmen) kg += "＋市独自の2割減免";
     var SHORT = {iryo: "医療分", shien: "支援金分", kaigo: "介護分", kodomo: "子ども分"};
     var rows = K.PARTS.filter(function (p) { return city.parts[p]; }).map(function (p) {
       var x = r.parts[p];
@@ -68,8 +70,10 @@
     }).join("");
     var notes = [];
     if (r.keigen) notes.push("世帯の所得が基準以下のため、均等割" + (Object.keys(city.parts).some(function (p) { return city.parts[p].byo; }) ? "・平等割" : "") + "が" + kg.replace("軽減", "") + "安くなっています。");
-    if (r.genmen) notes.push(city.name + "の制度で、世帯の所得が基準未満のため、医療分・支援金分・介護分の均等割・平等割が2割安くなっています（市独自の減免）。");
-    if (ms.some(function (m) { return m.age <= 5; })) notes.push("未就学児の均等割（医療分・支援金分）は半額になっています。");
+    if (r.genmen && LOC.sendai_genmen) notes.push(city.name + "の制度で、世帯の所得が基準未満（または2割軽減の世帯）のため、全区分の均等割・平等割（軽減前の額）の2割をさらに差し引いています（所得が一定額以下の方の減免）。区分の年額は減免の後、内訳の均等割・平等割は減免の前の額です。");
+    else if (r.genmen) notes.push(city.name + "の制度で、世帯の所得が基準未満のため、医療分・支援金分・介護分の均等割・平等割が2割安くなっています（市独自の減免）。");
+    if (LOC.sendai_child && ms.some(function (m) { return m.age <= 17; })) notes.push(city.name + "の制度で、18歳になった年度の3月31日までの子どもは、医療分・支援金分・介護分の均等割も全額減免されています（子育て世帯の減免）。");
+    else if (ms.some(function (m) { return m.age <= 5; })) notes.push("未就学児の均等割（医療分・支援金分）は半額になっています。");
     if (ms.some(function (m) { return m.age <= 17; })) notes.push("18歳になった年度の3月31日までの子どもは、子ども・子育て支援金分の均等割がかかりません。");
     if (ms.some(function (m) { return m.age >= 65; })) notes.push("65〜74歳の人の介護保険料は、国民健康保険" + city.kindWord + "とは別に介護保険から請求されます。");
     if (r.members[0] && r.members[0].yokohamaChild) notes.push("横浜市の制度で、19歳未満の子どもの分として世帯主の所得割の計算から" + yen(r.members[0].yokohamaChild) + "を差し引いています。");
