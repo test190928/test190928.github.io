@@ -171,6 +171,18 @@
       var amount = floorTo(sum, r.part || 1);
       var capped = amount > c.cap;
       if (capped) amount = c.cap;
+      // 福島市: 18歳以下（17歳以下＝2008年4月2日以降生まれ）の子どもが2人以上いる世帯は、年長の子から数えて2人目以降の
+      // 軽減後の均等割を全額減免する（医療・支援・介護分）。限度額を当てた後の額から引き、区分の端数を切り捨てる（市の公式の試算）
+      var fc = loc.fukushima_child;
+      if (fc && fc.parts.indexOf(part) >= 0) {
+        var kids = who.filter(function (m) { return m.cat === "pre" || m.cat === "child"; })
+          .sort(function (a, b) { return b.age - a.age; }).slice(1);
+        var ex = kids.reduce(function (s, m) {
+          var v = m.cat === "pre" ? (r.kintou ? c.kin - Math.ceil(c.kin / 2) : c.kin / 2) : c.kin;
+          return s + (r.kintou ? v - ceilTo(v * pr, r.kintou) : v * keep);
+        }, 0);
+        if (ex) amount = floorTo(Math.min(sum, c.cap) - ex, r.part || 1);
+      }
       res.parts[part] = {shotoku: shotoku, kintou: kin, byodo: byo, sum: sum, amount: amount, capped: capped};
       res.total += amount;
     });
