@@ -140,7 +140,12 @@
         shotoku = (r.shotoku_round || []).indexOf(part) >= 0 ? Math.round(hb) : floor(hb);
         if (ng) shotoku -= floor(idx.reduce(function (s, i) { return s + ps[i].nagoyaDed; }, 0) * c.rate);
       } else {
-        shotoku = idx.reduce(function (s, i) { return s + floor(floorTo(ps[i].base, r.base || 1) * c.rate); }, 0);
+        // r.shotoku === "person_round": 1人ごとに1円未満を四捨五入（浜松市の公式の試算シート: ROUND(基礎額×料率,0)）
+        var rnd = r.shotoku === "person_round" ? function (v) { return Math.round(v * 1e6) / 1e6; } : null;
+        shotoku = idx.reduce(function (s, i) {
+          var v = floorTo(ps[i].base, r.base || 1) * c.rate;
+          return s + (rnd ? Math.round(rnd(v)) : floor(v));
+        }, 0);
       }
       var kin = 0;
       who.forEach(function (m) {
