@@ -141,10 +141,15 @@
       who.forEach(function (m) {
         var v;
         if (r.kintou_person) {
-          // 軽減額を1人ごとに1円未満切上げ、未就学児はその残りの5割（1円未満切上げ）を引く（名古屋市の公式の試算）
-          var k1 = part === "kodomo" ? ((m.cat === "pre" || m.cat === "child") ? 0 : c.kin + (c.kin18 || 0)) : c.kin;
-          v = k1 - Math.ceil(k1 * pr - 1e-9);
-          if (m.cat === "pre" && part !== "kodomo") v -= Math.ceil(v / 2 - 1e-9);
+          // 軽減額を1人ごとに r.kintou_unit 円（既定1円）未満切上げ、未就学児はその残りの5割（同じ単位で切上げ）を引く（名古屋市・神戸市の公式の試算）。
+          // r.kin18_split: 子ども分の18歳以上の均等割（kin18）の軽減額を別に切り上げる（神戸市）
+          var u = r.kintou_unit || 1;
+          var red = function (k) { return k - ceilTo(k * pr, u); };
+          if (part === "kodomo") v = (m.cat === "pre" || m.cat === "child") ? 0 : r.kin18_split ? red(c.kin) + red(c.kin18 || 0) : red(c.kin + (c.kin18 || 0));
+          else {
+            v = red(c.kin);
+            if (m.cat === "pre") v -= ceilTo(v / 2, u);
+          }
           kin += v;
           return;
         }
@@ -156,7 +161,7 @@
       });
       var byo = c.byo || 0;
       if (r.kintou_person) {
-        byo = byo - Math.ceil(byo * pr - 1e-9);
+        byo = byo - ceilTo(byo * pr, r.kintou_unit || 1);
         // 名古屋市: 法定の軽減がある世帯の均等割から1人につき2,000円（均等割額の独自控除）
         if (ng && rate && ng.kintou_parts.indexOf(part) >= 0) kin -= ng.kintou * who.length;
       } else if (r.kintou) {
