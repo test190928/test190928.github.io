@@ -137,7 +137,8 @@
       if (r.shotoku === "household") {
         // r.shotoku_round に挙げた区分は1円未満を四捨五入（江戸川区の公式の試算: 医療・支援・子ども分は四捨五入、介護分は切捨て）
         var hb = idx.reduce(function (s, i) { return s + ps[i].base; }, 0) * c.rate;
-        shotoku = (r.shotoku_round || []).indexOf(part) >= 0 ? Math.round(hb) : floor(hb);
+        // r.shotoku_raw: 所得割の1円未満を丸めず、均等割・平等割と足してから区分の年額の端数を切り捨てる（柏市の公式の試算フォーム）
+        shotoku = r.shotoku_raw ? hb : (r.shotoku_round || []).indexOf(part) >= 0 ? Math.round(hb) : floor(hb);
         if (ng) shotoku -= floor(idx.reduce(function (s, i) { return s + ps[i].nagoyaDed; }, 0) * c.rate);
         // r.shotoku_unit: 世帯の合計の所得割を この単位未満で切り捨てる（京都市の公式の簡易計算表: ROUNDDOWN(基礎額の合計×料率,-1)）
         if (r.shotoku_unit) shotoku = floorTo(shotoku, r.shotoku_unit);
