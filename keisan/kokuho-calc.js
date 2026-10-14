@@ -180,9 +180,11 @@
         // 名古屋市: 法定の軽減がある世帯の均等割から1人につき2,000円（均等割額の独自控除）
         if (ng && rate && ng.kintou_parts.indexOf(part) >= 0) kin -= ng.kintou * who.length;
       } else if (r.kintou) {
-        // 軽減額を r.kintou 円単位で切り上げて引く（世帯の均等割・平等割の合計それぞれに）
-        kin = floorTo(kin, 1) - ceilTo(kin * pr, r.kintou);
-        byo = byo - ceilTo(byo * pr, r.kintou);
+        // 軽減額を r.kintou 円単位で切り上げて引く（世帯の均等割・平等割の合計それぞれに）。
+        // r.kintou_down: 軽減額を切り捨てる（長崎市の公式の試算: Math.floor(均等割×人数×軽減割合)）
+        var cut = r.kintou_down ? floorTo : ceilTo;
+        kin = floorTo(kin, 1) - cut(kin * pr, r.kintou);
+        byo = byo - cut(byo * pr, r.kintou);
       } else {
         kin = kin * keep;
         byo = byo * keep;
