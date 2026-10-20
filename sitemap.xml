@@ -1,17 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap><loc>https://seiricho.com/sitemap-root.xml</loc></sitemap>
-  <sitemap><loc>https://seiricho.com/kaigo/sitemap.xml</loc></sitemap>
   <sitemap><loc>https://seiricho.com/kansen/sitemap.xml</loc></sitemap>
   <sitemap><loc>https://seiricho.com/bus/sitemap.xml</loc></sitemap>
   <sitemap><loc>https://seiricho.com/hinan/sitemap.xml</loc></sitemap>
   <sitemap><loc>https://seiricho.com/iryo/sitemap.xml</loc></sitemap>
-  <sitemap><loc>https://seiricho.com/kion/sitemap.xml</loc></sitemap>
   <sitemap><loc>https://seiricho.com/chingin/sitemap.xml</loc></sitemap>
   <sitemap><loc>https://seiricho.com/kyujin/sitemap.xml</loc></sitemap>
-  <sitemap><loc>https://seiricho.com/taiki/sitemap.xml</loc></sitemap>
   <sitemap><loc>https://seiricho.com/kakei/sitemap.xml</loc></sitemap>
-  <sitemap><loc>https://seiricho.com/kokuho/sitemap.xml</loc></sitemap>
   <sitemap><loc>https://seiricho.com/keisan/sitemap.xml</loc></sitemap>
   <sitemap><loc>https://seiricho.com/sekiyu/sitemap.xml</loc></sitemap>
   <sitemap><loc>https://seiricho.com/yuki/sitemap.xml</loc></sitemap>
